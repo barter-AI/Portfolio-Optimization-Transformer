@@ -51,7 +51,7 @@ def train_one_epoch(model, constrain_head, optimizer, lr_scheduler, loss_fn, dat
                 return_dict = False
             )
             weights = constrain_head(outputs[0])
-            loss, expected_return, variance_return = loss_fn(weights, prices, future_sz)
+            loss, sharpe, expected_return, variance_return = loss_fn(weights, prices, future_sz)
             
             # train_sharpe.append(-loss.cpu())
             # print(-loss)
@@ -61,7 +61,7 @@ def train_one_epoch(model, constrain_head, optimizer, lr_scheduler, loss_fn, dat
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
-            sharpe = -loss.detach().cpu().numpy()
+            sharpe = -sharpe.detach().cpu().numpy()
             sharpe_list.append(sharpe)
             progress_bar.update(1)
             progress_bar.set_postfix(sharpe=sharpe)

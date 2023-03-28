@@ -17,13 +17,15 @@ class SharpeLoss(torch.nn.Module):
         Rp: Portfolio returns over a trading period, [BS,L]
         """
         sharpe_list = torch.zeros(Rp.shape[0])
+        sharpe = torch.zeros(Rp.shape[0])
         expected_Rp = []
         variance_Rp = []
         for i in range(len(Rp)):
             expected_Rp.append(torch.mean(Rp[i,:pred_sz[i]]))
             variance_Rp.append(torch.var(Rp[i,:pred_sz[i]]))
+            sharpe[i] = expected_Rp[i]/(torch.sqrt(variance_Rp[i] + eps))
             sharpe_list[i] = expected_Rp[i] - self.lam/(torch.sqrt(variance_Rp[i] + eps))
-        return sharpe_list, torch.tensor(expected_Rp), torch.tensor(variance_Rp)
+        return sharpe_list, sharpe, torch.tensor(expected_Rp), torch.tensor(variance_Rp)
 
     def arithmetic_return(self, P_i, P_j):
         """
@@ -52,5 +54,5 @@ class SharpeLoss(torch.nn.Module):
         #TODO: calculate loss for only those values where attn_mask is True(excluding next and past variable)
         arithmetic_returns = self.arithmetic_return(price_list[:, :-1, :], price_list[:, 1:, :])  ## [BS,L]
         Rp = self.portfolio_return(pred_weights[:,:price_list.shape[1]-1,:], arithmetic_returns) # [BS,L,]
-        sharpe_list, expected_Rp, variance_Rp = self.sharpe_ratio(Rp, pred_sz) # [BS]
-        return -1*torch.mean(sharpe_list), torch.mean(expected_Rp), torch.mean(variance_Rp)
+        sharpe_list, sharpe, expected_Rp, variance_Rp = self.sharpe_ratio(Rp, pred_sz) # [BS]
+        return -1*torch.mean(sharpe_list), -torch.mean(sharpe), torch.mean(expected_Rp), torch.mean(variance_Rp)
