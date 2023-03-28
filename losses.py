@@ -10,6 +10,7 @@ class SharpeLoss(torch.nn.Module):
     """
     def __init__(self, ):
         super().__init__()
+        self.lam = 0.01
 
     def sharpe_ratio(self, Rp, pred_sz):
         """
@@ -21,7 +22,7 @@ class SharpeLoss(torch.nn.Module):
         for i in range(len(Rp)):
             expected_Rp.append(torch.mean(Rp[i,:pred_sz[i]]))
             variance_Rp.append(torch.var(Rp[i,:pred_sz[i]]))
-            sharpe_list[i] = expected_Rp[i]/torch.sqrt(variance_Rp[i] + eps)
+            sharpe_list[i] = expected_Rp[i] - self.lam/(torch.sqrt(variance_Rp[i] + eps))
         return sharpe_list, torch.tensor(expected_Rp), torch.tensor(variance_Rp)
 
     def arithmetic_return(self, P_i, P_j):
